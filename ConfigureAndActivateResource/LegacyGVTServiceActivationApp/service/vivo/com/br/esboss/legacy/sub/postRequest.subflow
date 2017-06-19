@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmPassthru.msgnode="ComIbmPassthru.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:service_vivo_com_br_esboss_legacy_sub_errorHandling.subflow="service/vivo/com/br/esboss/legacy/sub/errorHandling.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="service/vivo/com/br/esboss/legacy/sub/postRequest.subflow"
+    nsPrefix="service_vivo_com_br_esboss_legacy_sub_postRequest.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1" useDefaults="true" udpSupport="true">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.STORE_EXPIRY_TIME" name="STORE_EXPIRY_TIME" defaultValueLiteral="86400">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="postRequest" bundleName="service/vivo/com/br/esboss/legacy/sub/postRequest" pluginId="LegacyGVTServiceActivationApp"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/LegacyGVTServiceActivationApp/icons/full/obj16/postRequest.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/LegacyGVTServiceActivationApp/icons/full/obj30/postRequest.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="264,20" computeExpression="esql://routine/service.vivo.com.br.esboss.legacy.sub#postRequest_RequestError.Main">
+        <translation xmi:type="utility:ConstantString" string="RequestError"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="147,159" computeExpression="esql://routine/service.vivo.com.br.esboss.legacy.sub#postRequest_prepareToStore.Main">
+        <translation xmi:type="utility:ConstantString" string="prepareToStore"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="275,160" queueName="LG.LEGACYGVTSERVICEACTIVATION.STR">
+        <translation xmi:type="utility:ConstantString" string="totStore"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="totStore.terminal.out" eventIdentity="LG.LEGACYGVTSERVICEACTIVATIONREQUEST.MSGREQUESTSTR.SUCCESS ">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/statusCode" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$Environment/Variables/statusDescription" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator dataLocation="$Environment/Variables/guuid" eventCorrelation="dataLocation"/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="CDATA" bitstreamContent="body"/>
+            <eventName literal="LG.LEGACYGVTSERVICEACTIVATIONREQUEST.MSGREQUESTSTR.SUCCESS "/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="388,156" computeExpression="esql://routine/service.vivo.com.br.esboss.legacy.sub#postRequest_storeError.Main">
+        <translation xmi:type="utility:ConstantString" string="storeError"/>
+        <monitorEvents eventSourceDescription="Out terminal" eventSourceName="storeError.terminal.out" eventIdentity="LG.LEGACYGVTSERVICEACTIVATIONREQUEST.MSGREQUESTSTR.FAILURE ">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent" eventUOW="none">
+            <applicationData dataLocation="$Environment/Variables/statusCode" isXPath="true" complexData="true"/>
+            <applicationData dataLocation="$Environment/Variables/statusDescription" isXPath="true" complexData="true"/>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator dataLocation="$Environment/Variables/guuid" eventCorrelation="dataLocation"/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="CDATA" bitstreamContent="body"/>
+            <eventName literal="LG.LEGACYGVTSERVICEACTIVATIONREQUEST.MSGREQUESTSTR.FAILURE "/>
+            <eventFilter dataLocation="true()" isXPath="true"/>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmPassthru.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="408,262">
+        <translation xmi:type="utility:ConstantString" string="monitoring"/>
+      </nodes>
+      <nodes xmi:type="service_vivo_com_br_esboss_legacy_sub_errorHandling.subflow:FCMComposite_1" xmi:id="FCMComposite_1_7" location="522,157">
+        <translation xmi:type="utility:ConstantString" string="errorHandling1"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input1" location="48,20">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Failure1" bundleName="service/vivo/com/br/esboss/legacy/sub/postRequest" pluginId="LegacyGVTServiceActivationApp"/>
+      </nodes>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Success" location="47,159">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Success" bundleName="service/vivo/com/br/esboss/legacy/sub/postRequest" pluginId="LegacyGVTServiceActivationApp"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input">
+        <bendPoints>104,-9,-116,-146</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="InTerminal.Success" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.STORE_EXPIRY_TIME">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.STORE_EXPIRY_TIME" bundleName="service/vivo/com/br/esboss/legacy/sub/postRequest" pluginId="LegacyGVTServiceActivationApp"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,105 @@
+BROKER SCHEMA service.vivo.com.br.esboss.legacy.sub
+
+
+
+CREATE COMPUTE MODULE errorHandling_generateError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- CALL CopyMessageHeaders();
+		-- CALL CopyEntireMessage();
+		
+		DECLARE envRef REFERENCE TO Environment.Variables;
+		DECLARE ptrException REFERENCE TO InputExceptionList.*[1];
+		
+		SET OutputRoot.Properties 					= envRef.originalMessage.Properties;
+		SET OutputRoot.MQMD 						= envRef.originalMessage.MQMD;			
+		
+   	    WHILE LASTMOVE(ptrException) DO
+				IF ptrException.Number IS NOT NULL THEN
+	        		SET envRef.messageNumber = ptrException.Number;
+	        		SET envRef.messageText = ptrException.Text;
+	  			END IF;
+	 			IF ptrException.Type IS NOT NULL THEN
+	        		SET envRef.messageText = ptrException.Text;
+	  			END IF;
+   	    	MOVE ptrException LASTCHILD;
+		END WHILE;	
+		
+		--Se recuperou o erro da execption
+		--IF(COALESCE(envRef.messageNumber,'') <> '') THEN
+		--	SET envRef.statusCode  			= envRef.messageNumber;
+		--	SET envRef.statusDescription	= envRef.messageText;
+		--END IF;
+		
+		CREATE FIELD OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:Header;
+		DECLARE header REFERENCE TO  OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:Header;
+		
+		SET header.ns:GUUID 			= envRef.originalMessage.XMLNSC.*:LegacyGVTServiceActivation.*:Header.*:GUUID;
+		SET header.ns:ExternalID 		= envRef.originalMessage.XMLNSC.*:LegacyGVTServiceActivation.*:Header.*:ExternalID;
+		SET header.ns:RequestDateTime 	= envRef.originalMessage.XMLNSC.*:LegacyGVTServiceActivation.*:Header.*:RequestDatetime;
+		SET header.ns:ResponseDateTime 	= CURRENT_TIMESTAMP;
+		SET header.ns:User 				= envRef.originalMessage.XMLNSC.*:LegacyGVTServiceActivation.*:Header.*:User;
+		SET header.ns:Operation 		= envRef.originalMessage.XMLNSC.*:LegacyGVTServiceActivation.*:Header.*:operation;
+		
+		CREATE FIELD OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:LegacyGVTNotify.ns:LegacyGVTNotifyResponse.ns:Result;
+		DECLARE response REFERENCE TO  OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:LegacyGVTNotify.ns:LegacyGVTNotifyResponse.ns:Result;
+		 
+		CASE (envRef.statusCode)
+		WHEN '4' THEN
+			-- Cenário de Erro Interno
+			SET response.ns:Type 								= 'I';
+			SET response.ns:Code 								= envRef.statusCode;
+			SET response.ns:Description 						= envRef.statusDescription;
+			SET response.ns:ErrorList.ns:Erro[1].ns:Source 		= 'GVT';
+			SET response.ns:ErrorList.ns:Erro[1].ns:Code 		= CAST (envRef.messageNumber AS CHARACTER);
+			
+			IF envRef.statusDetail IS NOT NULL THEN
+				SET response.ns:ErrorList.ns:Erro[1].ns:Description 	= envRef.statusDetail;
+			ELSE
+				SET response.ns:ErrorList.ns:Erro[1].ns:Description 	= envRef.messageText;
+			END IF;
+		WHEN '8' THEN
+			-- Cenário de 'Erro ao acessar legado'
+			SET response.ns:Type 								= 'L';
+			SET response.ns:Code 								= envRef.statusCode;
+			SET response.ns:Description 						= 'Erro na execucao da operacao no legado';
+			SET response.ns:ErrorList.ns:Erro[1].ns:Source 		= 'GVT';
+			SET response.ns:ErrorList.ns:Erro[1].ns:Code 		= CAST (envRef.messageNumber AS CHARACTER);
+			SET response.ns:ErrorList.ns:Erro[1].ns:Description = envRef.statusDescription; 
+		ELSE
+			SET response.ns:Type 								= 'I';
+			SET response.ns:Code 								= '4';
+			SET response.ns:Description 						= 'Erro no processamento interno.';
+			SET response.ns:ErrorList.ns:Erro[1].ns:Source 		= 'GVT';
+			SET response.ns:ErrorList.ns:Erro[1].ns:Code 		= CAST (envRef.messageNumber AS CHARACTER);
+			IF(envRef.statusCode = '99')THEN
+				SET response.ns:ErrorList.ns:Erro[1].ns:Description = envRef.statusDescription;
+			ELSE
+				SET response.ns:ErrorList.ns:Erro[1].ns:Description = envRef.messageText;
+			END IF;
+		END CASE;
+		
+		
+		--Monitoring 
+		SET envRef.statusCode 			= response.ns:Code ;
+		SET envRef.statusDescription	= response.ns:Description;
+		SET envRef.guuid				= envRef.originalMessage.XMLNSC.*:LegacyGVTServiceActivation.*:Header.*:GUUID;
+		
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

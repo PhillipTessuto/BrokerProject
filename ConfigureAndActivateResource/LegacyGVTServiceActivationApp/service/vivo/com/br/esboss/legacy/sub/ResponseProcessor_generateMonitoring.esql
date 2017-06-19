@@ -1,0 +1,117 @@
+BROKER SCHEMA service.vivo.com.br.esboss.legacy.sub
+DECLARE ns191 NAMESPACE 'http://www.gvt.com.br/ServiceManagement/ServiceOrderManagement/ServiceConfigurationManagement/ServiceConfigurationManagement/';
+DECLARE ns193 NAMESPACE 'http://www.gvt.com.br/ServiceManagement/ServiceOrderManagement/ServiceConfigurationManagement/notifyServiceConfigurationEntities';
+DECLARE ns196 NAMESPACE 'http://www.gvt.com.br/GvtCommonEntities';
+DECLARE ns NAMESPACE 'http://service.vivo.com.br/ESBOSS/Legacy/GVT/LegacyGVTServiceActivation';
+
+
+CREATE COMPUTE MODULE ResponseProcessor_generateMonitoring
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		CALL CopyMessageHeaders();
+		-- CALL CopyEntireMessage();
+		
+		DECLARE envRef REFERENCE TO Environment.Variables;	
+		SET envRef.storeMessage		= InputRoot;
+		
+		CREATE FIELD OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:Header;
+		DECLARE responseHeader REFERENCE TO OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:Header;	  
+		--Variáveis do Header utilizadas caso entre no fluxo Errorhandling
+		SET responseHeader.ns:GUUID				= envRef.storeMessage.XMLNSC.toStore.guuid;
+		SET responseHeader.ns:ExternalID		= envRef.storeMessage.XMLNSC.toStore.ExternalID;
+		SET responseHeader.ns:User				= envRef.storeMessage.XMLNSC.toStore.User;
+		SET responseHeader.ns:RequestDateTime	= envRef.storeMessage.XMLNSC.toStore.RequestDateTime;
+		SET responseHeader.ns:ResponseDateTime	= CURRENT_TIMESTAMP;
+		SET responseHeader.ns:Operation			= envRef.storeMessage.XMLNSC.toStore.Operation;
+		--Recupera a operacao
+		SET envRef.operation	= envRef.storeMessage.XMLNSC.toStore.Operation;
+		
+		CASE(envRef.operation)
+		WHEN 'notifyServiceConfiguration' THEN
+			CALL mapGenerateResponseNotificar();	
+		ELSE
+			CALL mapGenerateErroOperation(envRef.operation);
+		END CASE;
+				
+		--Monitoring
+		SET envRef.guuid	= envRef.storeMessage.XMLNSC.toStore.guuid;
+				
+		RETURN TRUE;
+	END;
+	
+	CREATE PROCEDURE mapGenerateErroOperation(IN operation CHARACTER NULLABLE)
+	BEGIN
+		
+		CREATE FIELD OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:LegacyGVTNotify.ns:LegacyGVTNotifyResponse.ns:Result;
+		DECLARE respBody REFERENCE TO OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:LegacyGVTNotify.ns:LegacyGVTNotifyResponse.ns:Result;
+	  	 
+	  	SET respBody.ns:Type			= 'I';
+	  	SET respBody.ns:Code			= '2';
+	  	SET respBody.ns:Description		= 'Erro no processamento interno. Errro ao recuperar Operacao - '||operation;
+	  			 
+	END;
+	
+	CREATE PROCEDURE mapGenerateResponseNotificar()
+	BEGIN
+		DECLARE envRef REFERENCE TO Environment.Variables;		
+		
+		
+		CREATE FIELD OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:LegacyGVTNotify.ns:LegacyGVTNotifyResponse;
+		DECLARE respBody REFERENCE TO OutputRoot.XMLNSC.ns:LegacyGVTServiceActivation.ns:LegacyGVTNotify.ns:LegacyGVTNotifyResponse;
+	
+		DECLARE response REFERENCE TO envRef.originalMessage.XMLNSC.*:notifyServiceConfigurationOut.ns193:gvtBusinessServiceResponse.ns196:messages;
+	  	 	
+	  	IF(COALESCE(envRef.failureLegacyCode,'0') = '0')THEN
+	  		--Se n ha erro no response
+		  	IF(response.*:statusCode = '0') THEN
+			  	SET respBody.ns:Result.ns:Code			= '0';
+			  	SET respBody.ns:Result.ns:Description	= 'Operacao realizada com Sucesso';
+			  	
+			ELSE
+				SET respBody.ns:Result.ns:Type 			= 'L';
+				SET respBody.ns:Result.ns:Code 			= '8';
+				SET respBody.ns:Result.ns:Description	= 'Erro na execucao da operacao no legado.';
+				
+				SET respBody.ns:Result.ns:ErrorList.ns:Erro.ns:Code 				= response.*:statusCode;
+				SET respBody.ns:Result.ns:ErrorList.ns:Erro.ns:Description 			= response.*:description||' - '||response.*:statusDetail;
+				 
+				--
+				SET envRef.statusCode			= respBody.ns:Result.ns:Code;
+				SET envRef.statusDescription	= respBody.ns:Result.ns:Description;
+		 
+			END IF;
+		ELSE
+			IF envRef.failureLegacyCode = '8' THEN
+				SET respBody.ns:Result.ns:Type 									= envRef.failureLegacyType;
+				SET respBody.ns:Result.ns:Code 									= envRef.failureLegacyCode;
+				SET respBody.ns:Result.ns:Description 							= 'Erro na execucao da operacao no legado';
+				SET respBody.ns:Result.ns:ErrorList.ns:Erro.ns:Source			= 'GVT';
+				SET respBody.ns:Result.ns:ErrorList.ns:Erro.ns:Code 			= envRef.failureLegacyNumber;
+				SET respBody.ns:Result.ns:ErrorList.ns:Erro.ns:Description 		= envRef.failureLegacyDescription;
+				
+			ELSE
+				SET respBody.ns:Result.ns:Type 			= envRef.failureLegacyType;
+				SET respBody.ns:Result.ns:Code 			= envRef.failureLegacyCode;
+				SET respBody.ns:Result.ns:Description 	= envRef.failureLegacyDescription;
+			END IF;	
+			
+			SET envRef.statusCode			= respBody.ns:Result.ns:Code;
+			SET envRef.statusDescription	= respBody.ns:Result.ns:Description;	
+		END IF;			
+		
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

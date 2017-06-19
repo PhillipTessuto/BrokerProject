@@ -1,0 +1,37 @@
+BROKER SCHEMA service.vivo.com.br.esboss.legacy.sub
+
+
+CREATE COMPUTE MODULE ResponseProcessor_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- CALL CopyMessageHeaders();
+		CALL CopyEntireMessage();
+		 
+		CREATE FIELD Environment.Variables;
+		DECLARE envRef REFERENCE TO Environment.Variables;
+		--salva msg response
+		SET envRef.originalMessage		= InputRoot;
+		
+		--Monitoring
+		SET envRef.statusCode 			= '0';
+		SET envRef.statusDescription 	= 'SUCCESS';
+		SET envRef.contextReply			= InputLocalEnvironment.SOAP.Response.UserContext;
+		 
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

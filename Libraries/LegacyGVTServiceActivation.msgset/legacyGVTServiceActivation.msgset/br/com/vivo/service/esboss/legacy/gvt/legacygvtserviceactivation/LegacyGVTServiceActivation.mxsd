@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://service.vivo.com.br/ESBOSS/Legacy/GVT/LegacyGVTServiceActivation" xmlns:tns="http://service.vivo.com.br/ESBOSS/Legacy/GVT/LegacyGVTServiceActivation">
+	<complexType name="HeaderType">
+		<sequence minOccurs="0">
+			<element name="GUUID" type="string">
+				<annotation>
+					<documentation>Identificado unico da solicitacao. Utilizado para
+						rastreabilidade do processo.</documentation>
+				</annotation>
+			</element>
+			<element minOccurs="0" name="ExternalID" type="string">
+				<annotation>
+					<documentation>ID externo ao sistema que sera utilizado para
+						restreabilidade.</documentation>
+				</annotation>
+			</element>
+			<element minOccurs="0" name="RequestDateTime" type="string">
+				<annotation>
+					<documentation>Datetime da solicitacao.</documentation>
+				</annotation>
+			</element>
+			<element minOccurs="0" name="ResponseDateTime">
+				<annotation>
+					<documentation>Datetime da responsta.</documentation>
+				</annotation>
+			</element>
+			<element minOccurs="0" name="User" type="string">
+				<annotation>
+					<documentation>Nome do servico que soliciitante.
+          </documentation>
+				</annotation>
+			</element>
+			<element minOccurs="0" name="Operation" type="string"/>
+		</sequence>
+	</complexType>
+	<complexType name="LegacyGVTNotifyRequest">
+		<sequence>
+			<element minOccurs="0" name="actionType" type="string"/>
+			<element minOccurs="0" name="ServiceOrderNumber" type="string"/>
+			<element minOccurs="0" name="originSystem" type="string"/>
+			<element minOccurs="0" name="Result" type="tns:ResultType"/>
+		</sequence>
+	</complexType>
+	<complexType name="LegacyGVTNotifyResponse">
+		<sequence>
+			<element minOccurs="0" name="Result" type="tns:ResultType"/>
+		</sequence>
+	</complexType>
+	<complexType name="ResultType">
+		<sequence>
+			<element name="Type" type="string"/>
+			<element name="Code" type="string"/>
+			<element minOccurs="0" name="Description" type="string"/>
+			<element minOccurs="0" name="Detail" type="string"/>
+			<element minOccurs="0" name="ErrorList">
+				<complexType>
+					<sequence minOccurs="0">
+						<element maxOccurs="unbounded" minOccurs="0" name="Erro">
+							<complexType>
+								<sequence>
+									<element name="Source" type="string">
+										<annotation>
+											<documentation>Legado. EX:
+												SAGRE
+												SIGRES
+												TERUS
+												INTERNAL
+                      </documentation>
+										</annotation>
+									</element>
+									<element name="Code" type="string"/>
+									<element minOccurs="0" name="Description" type="string"/>
+									<element minOccurs="0" name="Detail" type="string"/>
+								</sequence>
+							</complexType>
+						</element>
+					</sequence>
+				</complexType>
+			</element>
+		</sequence>
+	</complexType>
+	<complexType name="LegacyGVTNotify">
+		<choice>
+			<element name="LegacyGVTNotifyRequest" type="tns:LegacyGVTNotifyRequest"/>
+			<element name="LegacyGVTNotifyResponse" type="tns:LegacyGVTNotifyResponse"/>
+		</choice>
+	</complexType>
+	<element name="LegacyGVTServiceActivation">
+		<annotation>
+			<appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="//"/>
+      </appinfo>
+		</annotation>
+		<complexType>
+			<sequence>
+				<element name="Header" type="tns:HeaderType"/>
+				<choice>
+					<element name="LegacyGVTNotify" type="tns:LegacyGVTNotify"/>
+				</choice>
+			</sequence>
+		</complexType>
+	</element>
+	<element name="HeaderType" type="tns:HeaderType">
+		<annotation>
+			<appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="//"/>
+      </appinfo>
+		</annotation>
+	</element>
+	<element name="LegacyGVTNotify" type="tns:LegacyGVTNotify">
+		<annotation>
+			<appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="//"/>
+      </appinfo>
+		</annotation>
+	</element>
+	<element name="ResultType" type="tns:ResultType">
+		<annotation>
+			<appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="//"/>
+      </appinfo>
+		</annotation>
+	</element>
+</schema>

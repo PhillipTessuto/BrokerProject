@@ -1,0 +1,49 @@
+BROKER SCHEMA service.vivo.com.br.esboss.legacy.sub
+
+
+CREATE COMPUTE MODULE ResponseProcessor_extractFailure
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		-- CALL CopyMessageHeaders();
+		-- CALL CopyEntireMessage();		
+		CREATE FIELD Environment.Variables;
+
+		DECLARE envRef REFERENCE TO Environment.Variables;
+		DECLARE Error REFERENCE TO InputExceptionList.*[1].RecoverableException.RecoverableException.RecoverableException;
+		SET envRef.contextReply = InputLocalEnvironment.SOAP.Response.UserContext;
+
+		IF (Error.Text = 'SOAPAsyncRequest timed out.') THEN
+			SET envRef.failureLegacyCode = '3';
+			SET envRef.failureLegacyDescription = 'Erro de timeout do legado.';
+			SET envRef.failureLegacyType = 'T'; 
+			SET envRef.failureLegacyDetail = ' GVT ';
+		ELSEIF(Error.Text = 'SOAPAsyncRequest HTTP Error returned' OR 
+			CONTAINS(Error.RecoverableException.Text, 'validateSOAPResponse')) THEN
+			SET envRef.failureLegacyCode = '1';
+			SET envRef.failureLegacyDescription = 'Resposta do legado diferente da esperada.';
+			SET envRef.failureLegacyType = 'L'; 
+			SET envRef.failureLegacyDetail = ' GVT ';
+		ELSE
+			SET envRef.failureLegacyCode = '2';
+			SET envRef.failureLegacyDescription = 'Erro no processamento interno.';
+			SET envRef.failureLegacyType = 'I'; 
+			SET envRef.failureLegacyDetail = 'Erro ao acessar legado  GVT ';
+		END IF;
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

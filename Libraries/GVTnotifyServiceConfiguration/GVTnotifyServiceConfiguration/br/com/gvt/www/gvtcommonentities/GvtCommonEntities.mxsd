@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://www.gvt.com.br/GvtCommonEntities" xmlns:tns="http://www.gvt.com.br/GvtCommonEntities" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<xs:complexType name="gvtBusinessServiceResponse">
+		<xs:sequence>
+			<xs:element minOccurs="1" name="responseStatus" type="tns:gvtBusinessServiceResponseStatus"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="messages" nillable="true" type="tns:gvtBusinessServiceResponseMessage"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="gvtBusinessServiceResponseStatus">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="SUCCESS"/>
+			<xs:enumeration value="BUSINESS_ERROR"/>
+			<xs:enumeration value="FATAL_ERROR"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="gvtBusinessServiceResponseMessage">
+		<xs:sequence>
+			<xs:element minOccurs="1" name="description" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>breve descricao em portugues relevante ao negocio
+						do resultado da operacao</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="statusCode" type="xs:string">
+				<xsd:annotation>
+					<xsd:documentation>codigo retorno gvt do resultado da operacao conforme
+						definido em
+						http://svuxpjir1:9090/display/CAPINT/Consumer+Interface+Proxys
+					</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="statusDetail" type="xs:string">
+				<xsd:annotation>
+					<xsd:documentation>descricao do status code</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="system" type="xs:string">
+				<xsd:annotation>
+					<xsd:documentation>caso possivel informar qual sistema legado gvt
+						resultou a falha</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="version" nillable="true">
+		<xs:annotation>
+			<xs:documentation>Header GVT para versionamento de serviços. Guia de
+				utilizacao em
+				http://svuxpjir1:9090/display/CAPINT/Consumer+Interface+Proxys
+			</xs:documentation>
+		<xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/version;XSDElementDeclaration$MRObject" schemaObject="/0/version;XSDElementDeclaration"/>
+      </xsd:appinfo>
+    </xs:annotation>
+        			<xsd:complexType>
+      <xsd:simpleContent>
+        <xsd:extension base="tns:version_Type"/>
+      </xsd:simpleContent>
+    </xsd:complexType>
+    </xs:element>
+
+	<xs:simpleType name="TypeMessage">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="CHANGE_STATUS"/>
+			<xs:enumeration value="CLOSE"/>
+			<xs:enumeration value="DONE"/>
+			<xs:enumeration value="NOT_DONE"/>
+			<xs:enumeration value="DEINSTALL_EQUIPMENT"/>
+			<xs:enumeration value="UPDATE_EQUIPMENT_INVENTORY"/>
+			<xs:enumeration value="REMOVE_EQUIPMENT_INVENTORY"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="WorkforceAction">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ISSUE"/>
+			<xs:enumeration value="REAGENDAMENTO"/>
+			<xs:enumeration value="PENDENCIA"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="message">
+		<xs:sequence>
+			<xs:element minOccurs="1" name="id" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Id da mensagem</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="type" type="tns:TypeMessage">
+				<xsd:annotation>
+					<xsd:documentation>tipo da mensagem</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="startDateTime" type="xs:dateTime">
+				<xsd:annotation>
+					<xsd:documentation>Hora de inicio do processamento da mensagem
+					</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="endDateTime" type="xs:dateTime">
+				<xsd:annotation>
+					<xsd:documentation>Hora de finalização do processamento da mensagem
+					</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+			<xs:element minOccurs="1" name="status" type="xs:string">
+				<xsd:annotation>
+					<xsd:documentation>Situação da mensagem</xsd:documentation>
+				</xsd:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="gvtBusinessServiceResponseFault">
+		<xs:sequence>
+			<xs:element name="gvtBusinessServiceResponse" type="tns:gvtBusinessServiceResponse"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="gvtBusinessServiceResponseFault" type="tns:gvtBusinessServiceResponseFault">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/gvtBusinessServiceResponseFault;XSDElementDeclaration=1$MRObject" schemaObject="/0/gvtBusinessServiceResponseFault;XSDElementDeclaration=1"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xs:element>
+
+	<xs:complexType name="SearchParameters">
+		<xs:sequence>
+			<xs:element minOccurs="0" name="pageNumber" type="xs:string"/>
+			<xs:element minOccurs="0" name="pageSize" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- depreciado, existem sistemas que nao conseguem utilizar parametros do header -->
+	<xs:complexType name="HeaderParameters">
+		<xs:sequence>
+			<xs:element minOccurs="0" name="version" type="xs:string"/>
+			<xs:element minOccurs="0" name="from" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Parameters">
+		<xs:sequence>
+			<xs:element name="from" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+    <xs:simpleType name="version_Type">
+			<xs:restriction base="xs:string">
+				<xs:maxLength value="4"/>
+			</xs:restriction>
+		</xs:simpleType>
+</xsd:schema>
